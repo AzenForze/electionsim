@@ -56,6 +56,8 @@ func (e *Electorate) GetReport() Report {
 		Lines:           make(map[string]ReportLine),
 	}
 
+	eutil := e.RandomUtility()
+
 	for name, m := range e.Methods {
 		c := -1
 
@@ -72,12 +74,24 @@ func (e *Electorate) GetReport() Report {
 		//add the method's result to the report
 		r.Lines[name] = ReportLine{
 			Winner:     m.GetWinner(),
-			Efficiency: m.GetUtility() / e.MaxUtility,
+			Efficiency: (m.GetUtility() - eutil) / (e.MaxUtility - eutil),
 			Condorcet:  c,
 		}
 	}
 
 	return r
+}
+
+func (e *Electorate) RandomUtility() float64 {
+	sum := 0.0
+
+	for _, voter := range e.Voters {
+		for _, util := range voter.Utilities {
+			sum += util
+		}
+	}
+
+	return sum / float64(len(e.Candidates)*len(e.Voters))
 }
 
 func makeElectorate(params *AppParams, r *rand.Rand, mu *sync.Mutex) Electorate {
